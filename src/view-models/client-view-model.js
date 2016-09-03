@@ -4,6 +4,8 @@ const { observable, observableArray, computed } = ko;
 import { colorize, escapeHTML } from '../lib/html-helpers';
 import { boldRed, boldGreen, gray } from '../lib/colors';
 
+import { SoundService } from '../lib/sound-service';
+
 function readConfig(key) {
   return window.localStorage ? JSON.parse(window.localStorage.getItem(key)) : null;
 }
@@ -33,6 +35,7 @@ export class ClientViewModel {
     this.socket = io.connect(SERVER_URI);
     this.history = [];
     this.inputCallback = null;
+    this.soundService = new SoundService();
 
     // Observables
 
@@ -49,6 +52,7 @@ export class ClientViewModel {
     this.maxHistory = observable(readConfig('maxHistory') || 1000);
     this.echo = observable(readConfig('echo') || false);
     this.space = observable(readConfig('space') || false);
+    this.sound = observable(readConfig('sound') || true);
 
     // Computeds
 
@@ -66,6 +70,7 @@ export class ClientViewModel {
 
     this.echo.subscribe(echo => { writeConfig('echo', echo); });
     this.space.subscribe(space => { writeConfig('space', space); });
+    this.sound.subscribe(sound => { writeConfig('sound', sound); });
 
     // Socket Setup
 
@@ -142,6 +147,8 @@ export class ClientViewModel {
       case '.echo off': this.echo(false); return true;
       case '.space on': this.space(true); return true;
       case '.space off': this.space(false); return true;
+      case '.sound on': this.sound(true); return true;
+      case '.sound off': this.sound(false); this.soundService.stop(); return true;
       case '.new tab': this.parentViewModel.parentViewModel.newClientTab(); return true;
       case '.close tab': this.parentViewModel.close(); return true;
       default: return false;
@@ -189,6 +196,7 @@ export class ClientViewModel {
   }
 
   willClose() {
+    this.soundService.stop();
     this.socket.disconnect();
     return true;
   }
@@ -293,8 +301,23 @@ export class ClientViewModel {
   onReconnecting() {}
 
   onOutput(msg) {
-    if (msg && msg.toString) {
-      this.addLine(msg.toString());
+    let message = msg;
+    if (message && typeof message === 'object') {
+      if (message.effect) {
+        if (this.sound()) {
+          this.soundService.effect(message.effect);
+        }
+      }
+      if (message.ambiant) {
+        if (this.sound()) {
+          this.soundService.ambiant(message.ambiant);
+        }
+      }
+      message = message.text;
+    }
+
+    if (message && message.toString) {
+      this.addLine(message.toString());
       if (this.space()) { this.addLine(' '); }
     }
   }
@@ -316,6 +339,7 @@ export class ClientViewModel {
   }
 
   onLogout() {
+    this.soundService.stop();
     this.loggedIn(false);
   }
 
@@ -324,6 +348,7 @@ export class ClientViewModel {
   }
 
   onQuit() {
+    this.soundService.stop();
     this.playing(false);
   }
 

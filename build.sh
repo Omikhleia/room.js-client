@@ -21,6 +21,7 @@ mkdir -p dist/css/codemirror/themes
 cp bower_components/codemirror/theme/tomorrow-night-bright.css dist/css/codemirror/themes/
 cp bower_components/linkifyjs/linkify.js dist/js/
 cp bower_components/linkifyjs/linkify-html.js dist/js/
+cp bower_components/howler/dist/howler.min.js dist/js/
 
 # copy favicons
 cp src/favicons/* dist/

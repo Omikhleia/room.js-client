@@ -4,6 +4,7 @@
   "dependencies": {
     "codemirror": "^5.13.2",
     "knockout": "^3.4.0",
-    "linkifyjs": "^2.0.1"
+    "linkifyjs": "^2.0.1",
+    "howler": "^2.0.0"
   }
 }
